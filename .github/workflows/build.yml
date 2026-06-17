@@ -74,14 +74,14 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: build
-          key: koandroid-0.9.1-22.04-arm-base-${{ env.BASE_SHA }}
-          restore-keys: koandroid-0.9.1-22.04-arm-base-
+          key: koandroid-0.9.1-22.04-arm64-base-${{ env.BASE_SHA }}
+          restore-keys: koandroid-0.9.1-22.04-arm64-base-
 
       # ── Native build (skipped on cache hit) ───────────────────────────────
 
       - name: Build native base
         if: steps.cache.outputs.cache-hit != 'true'
-        run: make TARGET=android ANDROID_ARCH=arm OUTPUT_DIR=build base
+        run: make TARGET=android ANDROID_ARCH=arm64 OUTPUT_DIR=build base
 
       - name: Trim build directory before caching
         if: steps.cache.outputs.cache-hit != 'true'
@@ -92,7 +92,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: build
-          key: koandroid-0.9.1-22.04-arm-base-${{ env.BASE_SHA }}
+          key: koandroid-0.9.1-22.04-arm64-base-${{ env.BASE_SHA }}
 
       # ── APK assembly ──────────────────────────────────────────────────────
       # Packages Lua assets into a 7z archive and runs Gradle.
@@ -100,7 +100,7 @@ jobs:
 
       - name: Build APK
         run: |
-          make TARGET=android ANDROID_ARCH=arm OUTPUT_DIR=build INSTALL_DIR=install \
+          make TARGET=android ANDROID_ARCH=arm64 OUTPUT_DIR=build INSTALL_DIR=install \
             update --assume-old=base
 
       # ── Artifact ──────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ jobs:
       - name: Collect build info
         id: info
         run: |
-          apk=$(ls koreader-android-arm-*.apk 2>/dev/null | sort -V | tail -1)
+          apk=$(ls koreader-android-arm64-*.apk 2>/dev/null | sort -V | tail -1)
           [[ -n "$apk" ]] || { echo "No APK found"; exit 1; }
           cp "$apk" koreader-gl4.apk
           version=$(git describe HEAD)

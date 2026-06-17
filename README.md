@@ -144,9 +144,9 @@ docker pull koreader/koandroid:0.9.1-22.04
 docker run --rm -v "$PWD":/src -w /src \
   -e BASH_ENV=/home/ko/.bashrc \
   koreader/koandroid:0.9.1-22.04 \
-  bash -c 'make TARGET=android ANDROID_ARCH=arm OUTPUT_DIR=build INSTALL_DIR=install update'
+  bash -c 'make TARGET=android ANDROID_ARCH=arm64 OUTPUT_DIR=build INSTALL_DIR=install update'
 
-# 4. The APK will be at koreader-android-arm-*.apk
+# 4. The APK will be at koreader-android-arm64-*.apk
 ```
 
 The APK is signed with the Android debug keystore. Because debug keystores are machine-specific, a locally-built APK will have a different signature than the release APK and will require an uninstall before installing over the existing app.
@@ -163,6 +163,6 @@ For full build prerequisites, see the upstream [Building.md](https://github.com/
 | Internal ID | `bnrv1300` |
 | Android version | 8.1 (Oreo) |
 | SoC | Allwinner B300 (Emperor), ARM Cortex-A53 |
-| APK ABI | armv7a (32-bit; runs on arm64 hardware) |
+| Architecture | arm64-v8a |
 | Frontlight hardware | lm3630a (warm + cool LEDs) |
 | EPD controller | AllWinner (Emperor) |
