@@ -54,11 +54,19 @@ This permission survives updates but resets on a fresh uninstall + reinstall.
 
 ### 3. Enable com.nook.partner (if needed)
 
-Warmth control depends on Barnes & Noble's `GlowLightService`. It is usually enabled, but if warmth has no effect, run:
+Warmth control depends on Barnes & Noble's `GlowLightService`. It is usually enabled. If warmth has no effect, try enabling just the frontlight service first:
+
+```
+adb shell pm enable com.nook.partner/com.nook.partner.service.GlowLightService
+```
+
+If that doesn't work, the whole package is disabled and you need to enable it:
 
 ```
 adb shell pm enable com.nook.partner
 ```
+
+**Note:** enabling the full package also re-enables B&N's background services — OTA update checks (every 24 hours), the status bar overlay, and various system receivers. If you previously disabled the package to reduce B&N activity, you can re-disable individual components afterward. See the [nook-gl4plus-research](https://github.com/backcountrymountains/nook-gl4plus-research) repo for the full component inventory and which ones are safe to disable.
 
 ---
 
