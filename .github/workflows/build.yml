@@ -1,0 +1,142 @@
+name: Build & Release
+
+# Triggers:
+#   - Push a tag like v2026.06-gl4plus → full build + GitHub release
+#   - workflow_dispatch → manual build; optionally publish to a release
+on:
+  push:
+    tags:
+      - 'v*-gl4plus'
+  workflow_dispatch:
+    inputs:
+      koreader_ref:
+        description: 'Branch or tag in backcountrymountains/koreader to build from'
+        default: 'master'
+        required: true
+      create_release:
+        description: 'Publish APK to a GitHub release?'
+        type: boolean
+        default: false
+        required: false
+      release_tag:
+        description: 'Release tag to create or update (required if publishing)'
+        default: ''
+        required: false
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+# The koandroid container sets Android SDK/NDK paths in /home/ko/.bashrc.
+# Setting BASH_ENV makes bash source it automatically for every step.
+env:
+  BASH_ENV: /home/ko/.bashrc
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    container:
+      image: koreader/koandroid:0.9.1-22.04
+
+    steps:
+
+      # ── Checkout ──────────────────────────────────────────────────────────
+
+      - name: Checkout koreader source
+        uses: actions/checkout@v4
+        with:
+          repository: backcountrymountains/koreader
+          ref: ${{ inputs.koreader_ref || 'master' }}
+          fetch-depth: 0
+          fetch-tags: true
+          show-progress: false
+          submodules: false
+
+      - name: Trust repository (container runs as different uid)
+        run: git config --global --add safe.directory "$PWD"
+
+      - name: Fetch submodules
+        run: make fetchthirdparty
+
+      # ── Cache ─────────────────────────────────────────────────────────────
+      # Cache key is the base submodule commit — the native C/C++ build only
+      # needs to re-run when koreader-base changes.
+
+      - name: Generate cache key
+        run: echo "BASE_SHA=$(git -C base rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Restore base build cache
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: build
+          key: koandroid-0.9.1-22.04-arm-base-${{ env.BASE_SHA }}
+          restore-keys: koandroid-0.9.1-22.04-arm-base-
+
+      # ── Native build (skipped on cache hit) ───────────────────────────────
+
+      - name: Build native base
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: make TARGET=android ANDROID_ARCH=arm OUTPUT_DIR=build base
+
+      - name: Trim build directory before caching
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: rm -rf build/{cmake,staging,thirdparty}
+
+      - name: Save base build cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build
+          key: koandroid-0.9.1-22.04-arm-base-${{ env.BASE_SHA }}
+
+      # ── APK assembly ──────────────────────────────────────────────────────
+      # Packages Lua assets into a 7z archive and runs Gradle.
+      # --assume-old=base skips re-checking the native libraries.
+
+      - name: Build APK
+        run: |
+          make TARGET=android ANDROID_ARCH=arm OUTPUT_DIR=build INSTALL_DIR=install \
+            update --assume-old=base
+
+      # ── Artifact ──────────────────────────────────────────────────────────
+
+      - name: Collect build info
+        id: info
+        run: |
+          apk=$(ls koreader-android-arm-*.apk 2>/dev/null | sort -V | tail -1)
+          [[ -n "$apk" ]] || { echo "No APK found"; exit 1; }
+          cp "$apk" koreader-gl4.apk
+          version=$(git describe HEAD)
+          commit=$(git rev-parse HEAD)
+          short=$(git rev-parse --short HEAD)
+          echo "version=$version"   >> "$GITHUB_OUTPUT"
+          echo "commit=$commit"     >> "$GITHUB_OUTPUT"
+          echo "short=$short"       >> "$GITHUB_OUTPUT"
+          echo "Built $version from $short"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: koreader-gl4-${{ steps.info.outputs.version }}
+          path: koreader-gl4.apk
+
+      # ── Release ───────────────────────────────────────────────────────────
+      # Runs on tag push, or on manual dispatch when create_release is true.
+
+      - name: Publish release
+        if: github.event_name == 'push' || inputs.create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          name: KOReader GL4 Plus — ${{ steps.info.outputs.version }}
+          body: |
+            Built by [GitHub Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) from [`backcountrymountains/koreader@master`](https://github.com/backcountrymountains/koreader/tree/master) — commit [`${{ steps.info.outputs.short }}`](https://github.com/backcountrymountains/koreader/commit/${{ steps.info.outputs.commit }})
+
+            See [README](https://github.com/backcountrymountains/koreader-nook-gl4plus#readme) for installation instructions and a full list of changes from stock KOReader.
+          files: koreader-gl4.apk
+          fail_on_unmatched_files: true
