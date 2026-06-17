@@ -35,7 +35,7 @@ Download the APK from [Releases](../../releases).
 | Permission | Why it's needed |
 |------------|----------------|
 | `WRITE_SETTINGS` | Write `Settings.System.SCREEN_BRIGHTNESS` for brightness control |
-| `ACCESS_WIFI_STATE` | Read WiFi connection state and network details |
+| `ACCESS_WIFI_STATE` | Read WiFi connection state, SSID, IP, and MAC |
 | `CHANGE_WIFI_STATE` | Toggle WiFi on/off without leaving KOReader |
 
 No `INTERNET` permissions beyond what stock KOReader already requests. No `READ_PHONE_STATE`, `LOCATION`, or other sensitive permissions are added by this build.
@@ -103,10 +103,11 @@ The source and build branches are:
 | Repo | Branch | What it is |
 |------|--------|------------|
 | [`backcountrymountains/koreader`](https://github.com/backcountrymountains/koreader) | [`master`](https://github.com/backcountrymountains/koreader/tree/master) | Combined build — all features |
-| [`backcountrymountains/koreader`](https://github.com/backcountrymountains/koreader) | [`nook-gl4plus-pr1-clean`](https://github.com/backcountrymountains/koreader/tree/nook-gl4plus-pr1-clean) | PR1: lights only (upstream-ready) |
-| [`backcountrymountains/koreader`](https://github.com/backcountrymountains/koreader) | [`nook-gl4plus-pr2-clean`](https://github.com/backcountrymountains/koreader/tree/nook-gl4plus-pr2-clean) | PR2: WiFi toggle + network info (upstream-ready) |
-| [`backcountrymountains/android-luajit-launcher`](https://github.com/backcountrymountains/android-luajit-launcher) | [`nook-gl4plus-pr1-clean`](https://github.com/backcountrymountains/android-luajit-launcher/tree/nook-gl4plus-pr1-clean) | Lights + EPD controller |
-| [`backcountrymountains/android-luajit-launcher`](https://github.com/backcountrymountains/android-luajit-launcher) | [`nook-gl4plus-pr2-clean`](https://github.com/backcountrymountains/android-luajit-launcher/tree/nook-gl4plus-pr2-clean) | WiFi toggle + network details |
+| [`backcountrymountains/koreader`](https://github.com/backcountrymountains/koreader) | [`nook-gl4plus-lights`](https://github.com/backcountrymountains/koreader/tree/nook-gl4plus-lights) | Lights + EPD only (upstream PR branch) |
+| [`backcountrymountains/koreader`](https://github.com/backcountrymountains/koreader) | [`nook-gl4plus-pr2-clean`](https://github.com/backcountrymountains/koreader/tree/nook-gl4plus-pr2-clean) | WiFi toggle + network info |
+| [`backcountrymountains/android-luajit-launcher`](https://github.com/backcountrymountains/android-luajit-launcher) | [`nook-gl4plus-lights`](https://github.com/backcountrymountains/android-luajit-launcher/tree/nook-gl4plus-lights) | Lights + EPD controller (upstream PR branch) |
+| [`backcountrymountains/android-luajit-launcher`](https://github.com/backcountrymountains/android-luajit-launcher) | [`fix/epd-non-ui-thread`](https://github.com/backcountrymountains/android-luajit-launcher/tree/fix/epd-non-ui-thread) | EPD thread-safety fix (upstream PR branch) |
+| [`backcountrymountains/android-luajit-launcher`](https://github.com/backcountrymountains/android-luajit-launcher) | [`nook-gl4plus-pr2-clean`](https://github.com/backcountrymountains/android-luajit-launcher/tree/nook-gl4plus-pr2-clean) | WiFi toggle + network info |
 
 To build the APK yourself, see [Building from source](#building-from-source) below.
 
@@ -114,16 +115,18 @@ To build the APK yourself, see [Building from source](#building-from-source) bel
 
 ## Upstream PRs
 
-These changes are being contributed back to mainline KOReader:
+Changes being contributed back to mainline KOReader:
 
 | Repo | PR | Status |
 |------|----|--------|
-| [koreader/android-luajit-launcher](https://github.com/koreader/android-luajit-launcher) | [#592 — Add lights and EPD support for Nook Glowlight 4 Plus](https://github.com/koreader/android-luajit-launcher/pull/592) | Open, ready for review |
-| [koreader/koreader](https://github.com/koreader/koreader) | [#15561 — android: add Nook Glowlight 4 Plus (bnrv1300) lights support](https://github.com/koreader/koreader/pull/15561) | Draft (waiting on #592) |
-| [koreader/android-luajit-launcher](https://github.com/koreader/android-luajit-launcher) | PR2 — WiFi toggle + network details | Not yet submitted |
-| [koreader/koreader](https://github.com/koreader/koreader) | PR2 — android: WiFi toggle + network info | Not yet submitted |
+| [koreader/android-luajit-launcher](https://github.com/koreader/android-luajit-launcher) | [#596 — fix einkUpdate/hapticFeedback crash from NativeThread](https://github.com/koreader/android-luajit-launcher/pull/596) | Open |
+| [koreader/koreader](https://github.com/koreader/koreader) | [#15563 — android: fix einkUpdate/hapticFeedback crash from NativeThread](https://github.com/koreader/koreader/pull/15563) | Open |
+| [koreader/android-luajit-launcher](https://github.com/koreader/android-luajit-launcher) | [#592 — Add lights and EPD support for Nook Glowlight 4 Plus](https://github.com/koreader/android-luajit-launcher/pull/592) | Open |
+| [koreader/koreader](https://github.com/koreader/koreader) | [#15561 — android: add Nook Glowlight 4 Plus (bnrv1300) lights support](https://github.com/koreader/koreader/pull/15561) | Draft (waiting on #592 and #596) |
 
-Once all PRs merge, this build will be equivalent to a stock KOReader release for the GL4 Plus.
+**Not submitted upstream:** The WiFi toggle (`CHANGE_WIFI_STATE`) and network info (`ACCESS_WIFI_STATE`) features require new Android permissions that the KOReader maintainers have declined to add. They remain available in this build and on the `nook-gl4plus-pr2-clean` branches for anyone who wants them.
+
+Once the lights PRs merge, this build will differ from stock KOReader only in the WiFi and network info features.
 
 ---
 
