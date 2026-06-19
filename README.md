@@ -20,7 +20,7 @@ Download the APK from [Releases](../../releases).
 
 ### How it works
 
-**Warmth** is set by sending an intent to `com.nook.partner`'s `GlowLightService` — a Barnes & Noble system service that is exported with no permission requirement. This avoids needing root or `DEVICE_POWER`. Warmth is automatically restored on resume because the hardware node resets on every app re-entry.
+**Warmth** is set by sending an intent to `com.nook.partner`'s `GlowLightService` — a Barnes & Noble system service that is exported with no permission requirement. This avoids needing root or `DEVICE_POWER`. The hardware register persists across app restarts and resume, so no restore logic is needed.
 
 **Brightness** is written to `Settings.System.SCREEN_BRIGHTNESS`. This requires granting KOReader the "Modify system settings" permission once after install (see below).
 
